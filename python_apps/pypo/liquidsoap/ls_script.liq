@@ -47,7 +47,7 @@ end
 # cue cut fix for liquidsoap <1.2.2
 #
 # This was most likely broken on 1.1.1 (debian) as well.
-# 
+#
 # adapted from https://github.com/savonet/liquidsoap/issues/390#issuecomment-277562081
 #
 def fix_cue_in(~cue_in_metadata='liq_cue_in', m) =
@@ -80,9 +80,9 @@ def create_source()
     sources := list.append([l], !sources)
     server.register(namespace="queues",
                 "s#{!source_id}_skip",
-                fun (s) -> begin log("queues.s#{!source_id}_skip") 
-                    clear_queue(l) 
-                    "Done" 
+                fun (s) -> begin log("queues.s#{!source_id}_skip")
+                    clear_queue(l)
+                    "Done"
                 end)
     source_id := !source_id + 1
 end
@@ -235,6 +235,8 @@ def master_dj_disconnect() =
     update_source_status("master_dj", false)
 end
 
+
+
 #auth function for live stream
 def check_master_dj_client(user,password) =
     log("master connected")
@@ -285,6 +287,14 @@ else
     s
 end
 
+##################
+# function to format meta title as desired
+def format_title(m) =
+    title = m["title"]
+    [("title","Live! - #{title}")]
+end
+##################
+
 s = if master_live_stream_port != 0 and master_live_stream_mp != "" then
     master_dj =
         audio_to_stereo(
@@ -297,6 +307,8 @@ s = if master_live_stream_port != 0 and master_live_stream_mp != "" then
                 on_disconnect=master_dj_disconnect))
 
     ignore(output.dummy(master_dj, fallible=true))
+    master_dj = rewrite_metadata([("show", "Live!")], master_dj)
+    master_dj = map_metadata(format_title, master_dj)
 
     switch(id="master_show_schedule_noise_switch",
             track_sensitive=false,
